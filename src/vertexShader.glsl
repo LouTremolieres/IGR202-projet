@@ -28,9 +28,9 @@ void main() {
   vec3 camPos = inverse(viewMat)[3].xyz;
   vec3 v = camPos - fPosition;
   if(dot(v,fNormal) <= 0.0005) {
-    isContour = 0;
+    isContour = 1;
   }
-  else {isContour = 1;}
+  else {isContour = 0;}
 
   isSuggestiveContour = vIsSuggContour;
 }

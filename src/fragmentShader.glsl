@@ -74,8 +74,8 @@ void main() {
 
   //colorOut = vec4(radiance, 1.0); // build an RGBA value from an RGB one
  
-  //colorOut = isContour*vec4(material.albedo, 1.0);
-  //colorOut = isContour*vec4(1.0); 
-  colorOut = isSuggestiveContour*vec4(0.1,0.0,1.0,0.0) + vec4(1.f);
+  colorOut = vec4(0.);//vec4(material.albedo, 1.0);
+  //colorOut += isContour * vec4(1.0, 0.0, 0.0, 0.0); 
+  colorOut += isSuggestiveContour * vec4(0.0, 0.0, 1.0, 0.0);
   
 }

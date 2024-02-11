@@ -97,6 +97,7 @@ void Mesh::addPlan(float square_half_side)
 
 void Mesh::init(glm::vec3 camPos)
 {
+  computeNeighbourList();
   computeSuggContours(camPos);
 
   glCreateBuffers(1, &_posVbo); // Generate a GPU buffer to store the positions of the vertices
@@ -115,7 +116,7 @@ void Mesh::init(glm::vec3 camPos)
   glNamedBufferStorage(_ibo, indexBufferSize, _triangleIndices.data(), GL_DYNAMIC_STORAGE_BIT);
 
   glCreateBuffers(1, &_isSuggContourVbo); // Same for if it is a suggestive contour
-  size_t isSuggContourBufferSize = sizeof(glm::vec2)*_isSuggContour.size();
+  size_t isSuggContourBufferSize = sizeof(float)*_isSuggContour.size();
   glNamedBufferStorage(_isSuggContourVbo, isSuggContourBufferSize, _isSuggContour.data(), GL_DYNAMIC_STORAGE_BIT);
 
   glCreateVertexArrays(1, &_vao); // Create a single handle that joins together attributes (vertex positions, normals) and connectivity (triangles indices)
@@ -209,6 +210,7 @@ void Mesh::clear()
   _vertexPositions.clear();
   _vertexNormals.clear();
   _vertexTexCoords.clear();
+  _isSuggContour.clear();
   _triangleIndices.clear();
   if(_vao) {
     glDeleteVertexArrays(1, &_vao);
@@ -225,6 +227,10 @@ void Mesh::clear()
   if(_texCoordVbo) {
     glDeleteBuffers(1, &_texCoordVbo);
     _texCoordVbo = 0;
+  }
+  if(_isSuggContourVbo) {
+    glDeleteBuffers(1, &_isSuggContourVbo);
+    _isSuggContourVbo = 0;
   }
   if(_ibo) {
     glDeleteBuffers(1, &_ibo);
@@ -274,6 +280,22 @@ void loadOFF(const std::string &filename, std::shared_ptr<Mesh> meshPtr)
 
 // ------------------------------------------------ PROJET -------------------------------------------------------------
 
+void Mesh::computeNeighbourList() {
+  for(int i=0; i<_vertexPositions.size() ; i++) {
+    neighbourList.push_back({});
+  }
+
+  for(int k=0; k<_triangleIndices.size() ; k++) {
+    glm::uvec3 tiT = _triangleIndices[k];
+    neighbourList[tiT[0]].emplace(tiT[1]);
+    neighbourList[tiT[0]].emplace(tiT[2]);
+    neighbourList[tiT[1]].emplace(tiT[0]);
+    neighbourList[tiT[1]].emplace(tiT[2]);
+    neighbourList[tiT[2]].emplace(tiT[0]);
+    neighbourList[tiT[2]].emplace(tiT[0]);
+  }
+}
+
 const float Mesh::radialCurvature(glm::vec3 camPos, int i) {
   std::pair<std::vector<float>, std::vector<glm::vec3>> principalCurvs = computePrincipalCurvatures(i);
   float k1 = principalCurvs.first[0];
@@ -310,7 +332,7 @@ const bool Mesh::tresholdLimitation(glm::vec3 position) {
 const bool Mesh::isSuggestiveContour(glm::vec3 camPos, int i) {
   if(isFront(camPos, i)) {
     float kr = radialCurvature(camPos, i);
-    if(kr >=0.0001) {
+    if(kr >=0.01) {
       return false;
     }
   /*else {
@@ -320,9 +342,9 @@ const bool Mesh::isSuggestiveContour(glm::vec3 camPos, int i) {
   }
   return false;*/
     return true;
-    }
-  return false;
   }
+  return false;
+}
 
 
 // --------- Trouver courbure principal ---------
@@ -334,7 +356,7 @@ const glm::mat3 Mesh::computeM(int i) {
   glm::mat3 M;
 
   
-  std::vector<int> neighbours = computeNeighbours(i);
+  std::set<int> neighbours = computeNeighbours(i);
 
   //Calcul des wij
   std::vector<float> wijList = computeWijList(i, neighbours);  
@@ -396,7 +418,7 @@ std::vector<int> Mesh::incTriangles(int i, int j) {
   return res;
 }
 
-const std::vector<float> Mesh::computeWijList(int i, std::vector<int> neighbours) {
+const std::vector<float> Mesh::computeWijList(int i, std::set<int> neighbours) {
   std::vector<float> wijList;
   for(int j = 0; j< _vertexPositions.size() ; j++) {
     wijList.push_back(0.f);
@@ -433,10 +455,10 @@ const std::vector<float> Mesh::computeWijList(int i, std::vector<int> neighbours
   return wijList;
 }
 
-const std::vector<int> Mesh::computeNeighbours(int i) {
-  std::vector<int> neighbours;
+const std::set<int> Mesh::computeNeighbours(int i) {
+  std::set<int> neighbours;
 
-  std::vector<int> trianglesWithI;
+  /*std::vector<int> trianglesWithI;
   for(int k = 0; k<_triangleIndices.size() ; k++ ){
     glm::uvec3 triangle = _triangleIndices[k];
     if(triangle[0]==i || triangle[1]==i || triangle[2] ==i) {
@@ -467,7 +489,9 @@ const std::vector<int> Mesh::computeNeighbours(int i) {
       }
       
     }
-  }
+  }*/
+
+  neighbours = neighbourList[i];
   return neighbours;
 }
 
