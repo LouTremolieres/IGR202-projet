@@ -333,10 +333,12 @@ const bool Mesh::isSuggestiveContour(glm::vec3 camPos, int i) {
 const glm::mat3 Mesh::computeM(int i) {
   glm::mat3 M;
 
-  //Calcul des wij
-  std::vector<float> wijList = computeWijList(i);  
-
+  
   std::vector<int> neighbours = computeNeighbours(i);
+
+  //Calcul des wij
+  std::vector<float> wijList = computeWijList(i, neighbours);  
+
   for(int j : neighbours) {
 
     //Calcul de Tij
@@ -394,7 +396,7 @@ std::vector<int> Mesh::incTriangles(int i, int j) {
   return res;
 }
 
-const std::vector<float> Mesh::computeWijList(int i) {
+const std::vector<float> Mesh::computeWijList(int i, std::vector<int> neighbours) {
   std::vector<float> wijList;
   for(int j = 0; j< _vertexPositions.size() ; j++) {
     wijList.push_back(0.f);
@@ -402,7 +404,7 @@ const std::vector<float> Mesh::computeWijList(int i) {
 
   float wijSum=0;
 
-  std::vector<int> neighbours = computeNeighbours(i);
+  //std::vector<int> neighbours = computeNeighbours(i);
   for(int j : neighbours) {
     if(j!=i) {
       std::vector<int> incTri = incTriangles(i, j);

@@ -30,7 +30,7 @@ public:
   
   //Curvatures
   const glm::mat3 computeM(int i);
-  const std::vector<float> computeWijList(int i);
+  const std::vector<float> computeWijList(int i, std::vector<int> neighbours);
   const std::vector<int> computeNeighbours(int i);
   std::vector<int> incTriangles(int i, int j);
   const std::pair<std::vector<float>, std::vector<glm::vec3> > diagonalize(glm::mat2 mat, glm::mat3 Q);

@@ -42,7 +42,7 @@ float pi = 3.1415927;
 void main() {
   
   vec3 n;
-  if(isTexturedNormal){
+  if(isTexturedNormal != 0){
     n = normalize(2*texture(material.normalTex, fTexCoord).rgb-1);
   }
   else {
@@ -59,7 +59,7 @@ void main() {
       vec3 Li = a_light.color*a_light.intensity;
       
       vec3 albedo;
-      if(isTexturedColor){
+      if(isTexturedColor != 0){
         albedo = texture(material.albedoTex, fTexCoord).rgb;
       }
       else {
@@ -76,6 +76,6 @@ void main() {
  
   //colorOut = isContour*vec4(material.albedo, 1.0);
   //colorOut = isContour*vec4(1.0); 
-  colorOut = isSuggestiveContour*vec4(0.1,0.0,1.0,0.0);
+  colorOut = isSuggestiveContour*vec4(0.1,0.0,1.0,0.0) + vec4(1.f);
   
 }
